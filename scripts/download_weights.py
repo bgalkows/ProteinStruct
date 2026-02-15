@@ -37,7 +37,7 @@ def download() -> None:
             f"Download failed: got {actual} bytes, expected {MODEL_WEIGHTS_EXPECTED_SIZE}"
         )
 
-    size_mb = actual / (1024 * 1024)
+    size_mb = actual / (1024 * 1024)  # bytes to megabytes
     print(f"Downloaded: {size_mb:.1f} MB")
 
 
