@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.venv
+tests/
+pdbs_test/
+scripts/
+*.md
+LICENSE
