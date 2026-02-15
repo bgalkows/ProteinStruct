@@ -22,8 +22,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ProteinMPNN Mini-Service",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+app.state.model_ready = False
 
 
 @app.get("/health")
