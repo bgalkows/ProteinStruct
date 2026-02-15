@@ -1,0 +1,9 @@
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+python-multipart==0.0.6
+pydantic==2.10.6
+pytest==8.3.4
+httpx==0.29.1
+
+
+biopython==1.83.0
