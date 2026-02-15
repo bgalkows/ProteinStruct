@@ -8,13 +8,13 @@ from app.config import MODEL_WEIGHTS_FILE
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown events."""
-    # Model weights check
     if not MODEL_WEIGHTS_FILE.exists():
-        print(f"WARNING: Model weights not found at {MODEL_WEIGHTS_FILE}")
-        app.state.model_ready = False
-    else:
-        app.state.model_ready = True
-        print(f"Model ready: {MODEL_WEIGHTS_FILE}")
+        raise RuntimeError(
+            f"Model weights not found at {MODEL_WEIGHTS_FILE}. "
+            "Run: python scripts/download_weights.py"
+        )
+    app.state.model_ready = True
+    print(f"Model ready: {MODEL_WEIGHTS_FILE}")
     
     yield
     
