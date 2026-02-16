@@ -209,3 +209,6 @@ app/proteinmpnn/vanilla_model_weights/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Vendored dependencies
+vendor/

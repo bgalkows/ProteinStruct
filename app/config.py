@@ -6,6 +6,7 @@ APP_DIR = Path(__file__).parent
 TEST_PDBS_DIR = PROJECT_ROOT / "test_pdbs"
 
 PROTEINMPNN_DIR = APP_DIR / "proteinmpnn"
+PROTEINMPNN_REPO = PROJECT_ROOT / "vendor" / "ProteinMPNN"
 MODEL_WEIGHTS_DIR = PROTEINMPNN_DIR / "vanilla_model_weights"
 MODEL_WEIGHTS_FILE = MODEL_WEIGHTS_DIR / "v_48_020.pt"
 MODEL_WEIGHTS_URL = "https://huggingface.co/spaces/simonduerr/ProteinMPNN/resolve/main/ProteinMPNN/vanilla_model_weights/v_48_020.pt"
