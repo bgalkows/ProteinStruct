@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 from app.config import MODEL_WEIGHTS_DIR, PROTEINMPNN_REPO
-from app.proteinmpnn.parser import parse_fasta
+from app.proteinmpnn.parser import ParsedFasta, parse_fasta
 
 MPNN_SCRIPT = PROTEINMPNN_REPO / "protein_mpnn_run.py"
 
@@ -16,7 +16,7 @@ def design_sequences(
     chains: list[str],
     num_sequences: int = 3,
     sampling_temp: float = 0.1,
-) -> list[str]:
+) -> ParsedFasta:
     """Run ProteinMPNN on a PDB file and return designed sequences.
 
     Args:
@@ -26,7 +26,7 @@ def design_sequences(
         sampling_temp: Sampling temperature.
 
     Returns:
-        List of designed amino acid sequences.
+        ParsedFasta with native and designed sequences.
 
     Raises:
         FileNotFoundError: If PDB or ProteinMPNN script is missing.

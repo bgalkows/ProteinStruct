@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.config import TEST_PDBS_DIR
 from app.main import app
+from app.proteinmpnn.parser import ParsedFasta
 
 client = TestClient(app)
 
@@ -32,11 +33,15 @@ class TestDesignEndpoint:
 
     @patch("app.main.design_sequences")
     def test_success(self, mock_design):
-        mock_design.return_value = ["AAAA", "BBBB", "CCCC"]
+        mock_design.return_value = ParsedFasta(
+            native_sequence="NATIVE",
+            designed_sequences=["AAAA", "BBBB", "CCCC"],
+        )
         resp = _post_design(UBQ_PATH, chains=["A"], num_sequences=3)
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "success"
+        assert data["native_sequence"] == "NATIVE"
         assert data["metadata"]["chains"] == ["A"]
         assert data["metadata"]["num_sequences"] == 3
         assert data["metadata"]["num_residues"] == 76
@@ -44,7 +49,10 @@ class TestDesignEndpoint:
 
     @patch("app.main.design_sequences")
     def test_multichain(self, mock_design):
-        mock_design.return_value = ["SEQ1"]
+        mock_design.return_value = ParsedFasta(
+            native_sequence="NATIVE",
+            designed_sequences=["SEQ1"],
+        )
         pdb_path = TEST_PDBS_DIR / "1A3N.pdb"
         resp = _post_design(pdb_path, chains=["A", "B"], num_sequences=1)
         assert resp.status_code == 200

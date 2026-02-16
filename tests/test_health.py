@@ -16,4 +16,4 @@ def test_health():
 def test_root():
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "message" in resp.json()
+    assert "text/html" in resp.headers["content-type"]

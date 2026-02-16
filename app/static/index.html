@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ProteinMPNN</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 960px;
+            margin: 2em auto;
+            padding: 0 1em;
+            color: #222;
+        }
+        h1 { font-size: 1.4em; }
+        #drop-zone {
+            border: 2px dashed #999;
+            padding: 2em;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #drop-zone.dragover {
+            border-color: #333;
+            background: #f5f5f5;
+        }
+        #file-name {
+            margin-top: 0.5em;
+            font-weight: bold;
+        }
+        #params {
+            margin: 1em 0;
+            display: flex;
+            gap: 1.5em;
+            align-items: center;
+        }
+        #params label { font-size: 0.95em; }
+        #params input {
+            padding: 0.3em 0.5em;
+            font-size: 0.95em;
+        }
+        #design-btn {
+            padding: 0.5em 2em;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #design-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #error {
+            color: #c00;
+            margin: 1em 0;
+            white-space: pre-wrap;
+        }
+        #spinner {
+            color: #666;
+            margin: 1em 0;
+        }
+        #results { margin-top: 1.5em; }
+        .seq-row {
+            margin: 1em 0;
+        }
+        .seq-label {
+            font-weight: bold;
+            margin-bottom: 0.25em;
+            font-size: 0.95em;
+        }
+        .seq-chars {
+            font-family: monospace;
+            word-break: break-all;
+            line-height: 1.6;
+            font-size: 0.9em;
+            background: #fafafa;
+            padding: 0.4em;
+            border-radius: 3px;
+        }
+        .mutation {
+            color: #c00;
+            font-weight: bold;
+        }
+        .meta {
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>ProteinMPNN Sequence Designer</h1>
+
+    <div id="drop-zone">Drop PDB file here or click to browse</div>
+    <input type="file" id="file-input" accept=".pdb" hidden>
+    <div id="file-name"></div>
+
+    <div id="params">
+        <label>Chains <input type="text" id="chains" value="A" size="8"></label>
+        <label>Sequences <input type="number" id="num-seq" value="5" min="1" max="10" style="width:4em"></label>
+        <button id="design-btn" disabled>Design</button>
+    </div>
+
+    <div id="error" hidden></div>
+    <div id="spinner" hidden>Running ProteinMPNN...</div>
+    <div id="results" hidden></div>
+
+    <script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileNameDiv = document.getElementById('file-name');
+    const designBtn = document.getElementById('design-btn');
+    const errorDiv = document.getElementById('error');
+    const spinner = document.getElementById('spinner');
+    const resultsDiv = document.getElementById('results');
+
+    let pdbFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) setFile(fileInput.files[0]);
+    });
+
+    function setFile(f) {
+        pdbFile = f;
+        fileNameDiv.textContent = f.name;
+        designBtn.disabled = false;
+    }
+
+    designBtn.addEventListener('click', async () => {
+        errorDiv.hidden = true;
+        resultsDiv.hidden = true;
+        spinner.hidden = false;
+        designBtn.disabled = true;
+
+        const chainsRaw = document.getElementById('chains').value.trim();
+        const chains = JSON.stringify(chainsRaw.split(/[,\s]+/).filter(Boolean));
+        const numSeq = document.getElementById('num-seq').value;
+
+        const form = new FormData();
+        form.append('pdb_file', pdbFile);
+        form.append('chains', chains);
+        form.append('num_sequences', numSeq);
+
+        try {
+            const resp = await fetch('/design', { method: 'POST', body: form });
+            const data = await resp.json();
+            if (!resp.ok) {
+                throw new Error(data.detail || 'HTTP ' + resp.status);
+            }
+            renderResults(data);
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.hidden = false;
+        } finally {
+            spinner.hidden = true;
+            designBtn.disabled = false;
+        }
+    });
+
+    function renderResults(data) {
+        const native = data.native_sequence;
+        const m = data.metadata;
+
+        let html = '<div class="meta">' + m.num_residues + ' residues | chains: ' +
+                   m.chains.join(', ') + ' | ' + m.num_sequences + ' designs</div>';
+
+        html += '<div class="seq-row">';
+        html += '<div class="seq-label">Native</div>';
+        html += '<div class="seq-chars">' + esc(native) + '</div>';
+        html += '</div>';
+
+        data.sequences.forEach((seq, i) => {
+            const mutations = countMutations(native, seq);
+            html += '<div class="seq-row">';
+            html += '<div class="seq-label">Design ' + (i + 1) + ' (' + mutations + ' mutations)</div>';
+            html += '<div class="seq-chars">' + diffSeq(native, seq) + '</div>';
+            html += '</div>';
+        });
+
+        resultsDiv.innerHTML = html;
+        resultsDiv.hidden = false;
+    }
+
+    function diffSeq(native, designed) {
+        let out = '';
+        for (let i = 0; i < designed.length; i++) {
+            const c = esc(designed[i]);
+            if (i < native.length && designed[i] !== native[i]) {
+                out += '<span class="mutation">' + c + '</span>';
+            } else {
+                out += c;
+            }
+        }
+        return out;
+    }
+
+    function countMutations(native, designed) {
+        let count = 0;
+        for (let i = 0; i < designed.length; i++) {
+            if (i < native.length && designed[i] !== native[i]) count++;
+        }
+        return count;
+    }
+
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+    </script>
+</body>
+</html>

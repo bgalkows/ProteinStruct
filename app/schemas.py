@@ -14,6 +14,7 @@ class DesignMetadata(BaseModel):
 class DesignResponse(BaseModel):
     status: str = "success"
     metadata: DesignMetadata
+    native_sequence: str
     sequences: list[str]
 
 

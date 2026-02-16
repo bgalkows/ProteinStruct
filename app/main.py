@@ -6,8 +6,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-from app.config import DEFAULT_NUM_SEQUENCES, MODEL_WEIGHTS_FILE
+from app.config import APP_DIR, DEFAULT_NUM_SEQUENCES, MODEL_WEIGHTS_FILE
 from app.dependencies import cleanup, parse_design_params, save_upload
 from app.proteinmpnn.wrapper import design_sequences
 from app.schemas import DesignMetadata, DesignResponse
@@ -47,12 +48,6 @@ def health():
     }
 
 
-@app.get("/")
-def root():
-    """Redirect to health for browser"""
-    return {"message": "ProteinMPNN service", "docs": "/docs"}
-
-
 @app.post("/design", response_model=DesignResponse)
 async def design(
     pdb_file: UploadFile = File(...),
@@ -79,7 +74,7 @@ async def design(
             num_residues += sum(1 for r in chain if r.get_id()[0] == " ")
 
         # Run ProteinMPNN
-        sequences = design_sequences(
+        result = design_sequences(
             pdb_path=str(tmp_path),
             chains=params.chains,
             num_sequences=params.num_sequences,
@@ -89,9 +84,10 @@ async def design(
             metadata=DesignMetadata(
                 num_residues=num_residues,
                 chains=params.chains,
-                num_sequences=len(sequences),
+                num_sequences=len(result.designed_sequences),
             ),
-            sequences=sequences,
+            native_sequence=result.native_sequence,
+            sequences=result.designed_sequences,
         )
 
     except PDBValidationError as e:
@@ -112,3 +108,6 @@ async def design(
 
     finally:
         cleanup(tmp_path)
+
+
+app.mount("/", StaticFiles(directory=str(APP_DIR / "static"), html=True), name="static")
