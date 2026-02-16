@@ -86,3 +86,10 @@ def _check_backbone(structure: Structure, chains: list[str]) -> None:
                 f"Chain {chain_id} has only {ca_count} CA atoms "
                 f"(minimum {MIN_CA_ATOMS} required for ProteinMPNN)"
             )
+
+
+# Helper
+def count_hetatm(pdb_path: str) -> int:
+    """Count HETATM records in PDB file"""
+    with open(pdb_path) as f:
+        return sum(1 for line in f if line.startswith("HETATM"))

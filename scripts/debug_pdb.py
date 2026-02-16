@@ -1,7 +1,7 @@
 """ Scratch script for checking out PDBs"""
 from Bio.PDB import PDBParser
 
-structure = PDBParser(QUIET=True).get_structure("test", "test_pdbs/1UBQ.pdb")
+structure = PDBParser(QUIET=True).get_structure("test", "test_pdbs/1A3N.pdb")
 
 for model in structure:
     print(f"Model {model.get_id()}")
