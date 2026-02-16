@@ -4,6 +4,10 @@ Lightweight web app for protein sequence design using vanilla ProteinMPNN.
 
 ## Setup
 
+### 0. Environment
+
+The repo assumes an installation of Docker and Docker Compose.
+
 ### 1. Download model weights
 
 Weights are not included in the repo. Download them before starting the service:
