@@ -6,11 +6,11 @@ Web app for protein sequence design using [ProteinMPNN](https://github.com/daupa
 
 ## Quickstart
 
-**Prerequisites:** Docker and Docker Compose.
+**Prerequisites:** Python 3, Docker, and Docker Compose.
 
 ```bash
-# 1. Download model weights (~6.4 MB, one-time)
-python scripts/download_weights.py
+# 1. Download model weights (~6.4 MB, one-time, no pip install needed)
+python3 scripts/download_weights.py
 
 # 2. Start the service
 docker compose up --build
