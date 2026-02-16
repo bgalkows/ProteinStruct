@@ -9,14 +9,18 @@ Web app for protein sequence design using [ProteinMPNN](https://github.com/daupa
 **Prerequisites:** Python 3, Docker, and Docker Compose.
 
 ```bash
-# 1. Download model weights (~6.4 MB, one-time, no pip install needed)
+# 1. Clone ProteinMPNN into vendor/ (not tracked in git)
+### (git submodule)
+git clone https://github.com/dauparas/ProteinMPNN vendor/ProteinMPNN
+
+# 2. Download model weights (~6.4 MB, one-time, no pip install needed)
 python3 scripts/download_weights.py
 
-# 2. Start the service
+# 3. Start the service
 docker compose up --build
 ```
 
-Open `http://localhost:8000` in a browser. The service refuses to start if weights are missing.
+Open `http://localhost:8000` in a browser. The service refuses to start if weights are missing. If `/design` returns a 500 error, the `vendor/ProteinMPNN` clone is likely missing.
 
 ## Usage
 
