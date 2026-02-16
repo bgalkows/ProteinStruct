@@ -82,6 +82,26 @@ vendor/ProteinMPNN/    Vendored ProteinMPNN repo
 
 **Errors:** 400 (bad PDB or params), 504 (timeout), 500 (internal).
 
+### Example requests
+For reference
+
+```bash
+# Health check
+curl localhost:8000/health
+
+# Design 3 sequences for chain A of ubiquitin
+curl -X POST localhost:8000/design \
+  -F "pdb_file=@test_pdbs/1UBQ.pdb" \
+  -F 'chains=["A"]' \
+  -F "num_sequences=3"
+
+# Multi-chain design
+curl -X POST localhost:8000/design \
+  -F "pdb_file=@test_pdbs/1A3N.pdb" \
+  -F 'chains=["A","B"]' \
+  -F "num_sequences=2"
+```
+
 ## Development
 
 ```bash
